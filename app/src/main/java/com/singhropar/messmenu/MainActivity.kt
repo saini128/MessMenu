@@ -4,16 +4,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.singhropar.messmenu.ui.theme.MessMenuTheme
+import com.singhropar.messmenu.viewmodel.MessViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,11 +21,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MessMenuTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    MessMenuScreen()
                 }
             }
         }
@@ -33,19 +30,27 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier,
-        color = Color.Blue,
-        fontSize = 30.sp
-    )
-}
+fun MessMenuScreen(viewModel: MessViewModel = viewModel()) {
+    val menu by viewModel.menu.collectAsState()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MessMenuTheme {
-        Greeting("Android")
+    if (menu.isEmpty()) {
+        Text("Loading...", modifier = Modifier.padding(16.dp))
+    } else {
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            items(menu) { hostelMenu ->
+                Text(hostelMenu.hostel, style = MaterialTheme.typography.titleLarge)
+
+                hostelMenu.menu.forEach { (day, meals) ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(day.uppercase(), style = MaterialTheme.typography.titleMedium)
+
+                    Text("Breakfast: ${meals.breakfast.joinToString()}")
+                    Text("Lunch: ${meals.lunch.joinToString()}")
+                    Text("Dinner: ${meals.dinner.joinToString()}")
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
     }
 }
