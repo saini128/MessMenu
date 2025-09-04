@@ -3,6 +3,8 @@ package com.singhropar.messmenu.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,12 +22,17 @@ import java.util.*
 @Composable
 fun MessMenuScreen(viewModel: MessViewModel = viewModel()) {
     val menu by viewModel.menu.collectAsState()
-    var selectedHostel by remember { mutableStateOf<String?>(null) }
+    val selectedHostel by viewModel.selectedHostel.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mess Menu", style = MaterialTheme.typography.titleLarge) }
+                title = { Text("Mess Menu") },
+                actions = {
+                    IconButton(onClick = { viewModel.refreshMenu() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
+                    }
+                }
             )
         }
     ) { innerPadding ->
@@ -50,7 +57,7 @@ fun MessMenuScreen(viewModel: MessViewModel = viewModel()) {
                     HostelSelector(
                         hostels = menu.map { it.hostel },
                         selectedHostel = selectedHostel,
-                        onHostelSelected = { selectedHostel = it }
+                        onHostelSelected = { viewModel.selectHostel(it) }
                     )
                 }
 

@@ -1,31 +1,60 @@
 package com.singhropar.messmenu.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.singhropar.messmenu.data.MessMenuItem
-import com.singhropar.messmenu.data.MessRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.singhropar.messmenu.data.*
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class MessViewModel : ViewModel() {
+class MessViewModel(app: Application) : AndroidViewModel(app) {
     private val repository = MessRepository()
+    private val prefs = UserPreferences(app)
 
     private val _menu = MutableStateFlow<List<MessMenuItem>>(emptyList())
-    val menu: StateFlow<List<MessMenuItem>> = _menu
+    val menu: StateFlow<List<MessMenuItem>> = _menu.asStateFlow()
+
+    private val _selectedHostel = MutableStateFlow<String?>(null)
+    val selectedHostel: StateFlow<String?> = _selectedHostel.asStateFlow()
 
     init {
-        fetchMenu()
+        // Load cached data + selected hostel
+        viewModelScope.launch {
+            prefs.getCachedMenu().collect { json ->
+                if (!json.isNullOrEmpty()) {
+                    val type = object : TypeToken<List<MessMenuItem>>() {}.type
+                    _menu.value = Gson().fromJson(json, type)
+                } else {
+                    refreshMenu()
+                }
+            }
+        }
+        viewModelScope.launch {
+            prefs.getSelectedHostel().collect { hostel ->
+                _selectedHostel.value = hostel
+            }
+        }
     }
 
-    fun fetchMenu() {
+    fun refreshMenu() {
         viewModelScope.launch {
             try {
-                val data = repository.getMenu()
-                _menu.value = data
+                val result = repository.getMenu()
+                _menu.value = result
+                val json = Gson().toJson(result)
+                prefs.saveCachedMenu(json)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+    }
+
+    fun selectHostel(hostel: String) {
+        _selectedHostel.value = hostel
+        viewModelScope.launch {
+            prefs.saveSelectedHostel(hostel)
         }
     }
 }
