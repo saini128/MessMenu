@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.singhropar.messmenu.data.*
+import com.singhropar.messmenu.ui.widget.MessMenuWidgetProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -49,6 +50,8 @@ class MessViewModel(app: Application) : AndroidViewModel(app) {
                 e.printStackTrace()
             }
         }
+        MessMenuWidgetProvider.refreshAllWidgets(getApplication())
+
     }
 
     fun selectHostel(hostel: String) {
